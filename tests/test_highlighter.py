@@ -5,7 +5,7 @@ author smith@example.com
 license: MIT"""
 
 import unittest
-from highlighter import create_app
+from highlight import create_app
 
 
 class HighlightTest(unittest.TestCase):
@@ -28,5 +28,13 @@ class HighlightTest(unittest.TestCase):
     def test_markup_text(self):
         """Test markup process"""
         response = self.app.post('/', data={'search': self.search_text,
+                                            'text': self.text})
+        self.assertIn(self.highlighted_text, response.data)
+
+        
+    def test_case_sensitiv_markup_text(self):
+        """Test markup process"""
+        response = self.app.post('/', data={'search': self.search_text,
+                                            'is_sensetive': 1,
                                             'text': self.text})
         self.assertIn(self.highlighted_text, response.data)

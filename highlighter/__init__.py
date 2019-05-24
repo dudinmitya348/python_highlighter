@@ -21,7 +21,8 @@ def create_app():
     def process():
         search_text = request.form['search']
         text = request.form['text']
-        highlighted_text = highlight_text(text, search_text)
+        is_sensetive = request.form.get('is_sensetive', '0')
+        highlighted_text = highlight_text(text, search_text, is_sensetive)
         result = {'text': text,
                   'highlighted_text': Markup(highlighted_text),
                   }
@@ -35,14 +36,32 @@ def create_app():
         result = "<mark>" + text + "</mark>"
         return result
 
-    def highlight_text(text, expr):
+    def replacement_list(expr, text):
+        """Conducts text processing to obtain all forms of the search text.
+        @: param text - the text of the line to be marked
+        @: return a list of unique word forms."""
+        result = []
+        index = 0
+        while index >= 0:
+            index = text.lower().find(expr.lower(), index)
+            if index < 0: break
+            separator = ''
+            result.append(separator.join([text[x] for x in range(index, index+len(expr))]))
+            index += len(expr)
+        result = set(result)
+        return result
+
+    def highlight_text(text, expr, is_sensetive='0'):
         """Markup searched string in given text.
         @:param text - string text to be processed (e.g., 'The sun in the sky')
         @:param expr - string pattern to be searched in the text (e.g., 'th')
         @:return marked text, e.g., "<mark>Th</mark>e sun in <mark>th</mark>e sky"."""
-        if expr in text:
+        if is_sensetive == '1':
             text = text.replace(expr, markup_text(expr))
-        result = text
-        return result
+        else:
+            replacement = replacement_list(expr, text)
+            for token in replacement:
+                text = text.replace(token, markup_text(token))
+        return text
 
     return app
